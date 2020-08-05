@@ -1,5 +1,7 @@
-package filehandler
+package com.dan.spring.boot.nexus.handler
 
+import com.dan.spring.boot.nexus.pojo.NexusPojo
+import com.dan.spring.boot.nexus.pojo.UploadItem
 import java.io.File
 
 class FileHandler private constructor() {
@@ -15,7 +17,34 @@ class FileHandler private constructor() {
      * 起始根目录
      */
     var dir: File = File("")
+
+    var nexusPojoList: List<NexusPojo> = emptyList()
+
     private val itemList = arrayListOf<UploadItem>()
+
+    companion object {
+        val root = "C:\\Users\\Administrator\\.gradle\\caches\\modules-2\\files-2.1"
+    }
+
+    var running: Boolean = false
+
+    fun getAllFile(): List<UploadItem> {
+        if (running) {
+            return emptyList()
+        }
+        running = true
+
+        this.startWalk(File(root))
+        val copy = arrayListOf<UploadItem>()
+        copy.addAll(itemList)
+        reset()
+        return copy
+    }
+
+    fun reset() {
+        itemList.clear()
+        running = false
+    }
 
     fun startWalk(file: File = dir) {
         val walkTopDown = file
@@ -36,16 +65,19 @@ class FileHandler private constructor() {
                 }.forEach {
                     itemList.add(UploadItem(it.name))
                 }
-        file.walkTopDown()
+//        file.walkTopDown()
         walkByGroup()
     }
 
     private fun walkByGroup() {
         val tempList = arrayListOf<UploadItem>()
         itemList.forEach {
-            File(groupPath(it))
-                    .walk(direction = FileWalkDirection.TOP_DOWN)
+            val file1 = File(groupPath(it))
+            file1.walk(direction = FileWalkDirection.TOP_DOWN)
                     .maxDepth(1)
+                    .onEnter {
+                        true
+                    }
                     .filter { file ->
                         !file.name.equals(it.group)
                     }
@@ -60,9 +92,8 @@ class FileHandler private constructor() {
                         }
                         return@filter false
 
-                    }
-                    .forEach { file ->
-                        println("artifact:" + file)
+                    }.forEach { file ->
+//                        println("artifact:" + file)
                         tempList.add(it.copy(art = file.name))
                     }
         }
@@ -82,7 +113,7 @@ class FileHandler private constructor() {
                         file.name != it.art
                     }
                     .forEach { file ->
-                        println("version:" + file)
+//                        println("version:" + file)
                         tempList.add(it.copy(version = file.name))
                     }
         }
@@ -113,8 +144,15 @@ class FileHandler private constructor() {
                         !file.name.contains("-javadoc")
                     }
                     .forEach { file ->
-                        println("file:" + file)
-                        tempList.add(it.copy(file = file, extension = file.extension))
+//                        println("file:" + file)
+                        val nexus = NexusPojo(it.group, it.art, it.version)
+                        val copy = if (nexusPojoList.contains(nexus)) {
+                            println("找到已经上传的内容$it")
+                            it.copy(file = file, extension = file.extension, installed = true)
+                        } else {
+                            it.copy(file = file, extension = file.extension, installed = false)
+                        }
+                        tempList.add(copy)
                     }
         }
         itemList.clear()

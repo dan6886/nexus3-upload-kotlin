@@ -8,7 +8,7 @@ import java.io.File
 import java.io.IOException
 
 /**
- * 完美
+ * 上传
  */
 class NexusComponentUploader {
     private val client: OkHttpClient = OkHttpClient.Builder()
