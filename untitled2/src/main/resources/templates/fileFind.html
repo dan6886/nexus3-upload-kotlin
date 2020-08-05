@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Title</title>
     <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{/layui/css/lay/modules/tableFilter.css}">
+
 </head>
 <body>
 <div style="margin-bottom: 5px;">
@@ -16,7 +18,13 @@
          data-ad-client="ca-pub-6111334333458862" data-ad-slot="3820120620"></ins>
 
 </div>
-<table class="layui-table" id="test"
+<div style="text-align: center" id='btn'>
+    <div class="layui-inline">
+        <input class="layui-input" name="keyword" id="demoReload" autocomplete="off">
+    </div>
+    <button class="layui-btn" data-type="reload">搜索</button>
+</div>
+<table class="layui-table-filter layui-inline tableFilter-has" id="test"
        lay-filter="demo">
 </table>
 
@@ -42,11 +50,11 @@
                     unresize: true,
                     sort: true,
                 }
-                , {field: 'art', title: 'artifact', width: 200,}
+                , {field: 'art', title: 'artifact', width: 200, filter: true}
                 , {field: 'version', title: '版本', width: 100,}
                 , {field: 'file', title: '文件', width: 500, sort: true}
                 , {
-                    field: 'extension', title: '格式', width: 70, sort: true
+                    field: 'extension', title: '格式', width: 80, sort: true
                 }
                 , {
                     field: "installed",
@@ -61,6 +69,10 @@
                         } else {
                             return '<a class="layui-btn layui-btn-danger layui-btn-xs " lay-event="upload">上传</a>';
                         }
+                    }
+                }, {
+                    field: 'file', title: '拷贝', width: 500, templet: function (d) {
+                        return 'implementation &apos;' + d.group + ':' + d.art + ':' + d.version+'&apos;'
                     }
                 }
             ]]
@@ -93,14 +105,28 @@
                     upload(data)
                     layer.closeAll()
                 });
-            } else if (obj.event === 'del') {
-                layer.confirm('真的删除行么', function (index) {
-                    obj.del();
-                    layer.close(index);
-                });
-            } else if (obj.event === 'edit') {
-                layer.alert('编辑行：<br>' + JSON.stringify(data))
             }
+        });
+
+        var $ = layui.$, active = {
+            reload: function () {
+                var demoReload = $('#demoReload');
+                //执行重载
+                console.log(demoReload.val())
+                table.reload('test', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    , where: {
+                        keyword: demoReload.val()
+                    }
+                });
+            }
+        };
+
+        $('#btn .layui-btn').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
         });
     });
 
@@ -118,6 +144,23 @@
             }
         });
     }
+
+    // $(document)
+    //     .on('click','.searchBtn',function () {
+    //         userTable.reload({
+    //             where:{
+    //                 search_arg:$('.searchName').val().trim()
+    //             },
+    //             page:{
+    //                 curr:1
+    //             }
+    //         })
+    //     });
+    // .keyup(function(event){
+    //     if(event.keyCode == 13)
+    //         event.preventDefault()
+    //     $(".searchBtn").trigger("click");
+    // });
 </script>
 </body>
 </html>
