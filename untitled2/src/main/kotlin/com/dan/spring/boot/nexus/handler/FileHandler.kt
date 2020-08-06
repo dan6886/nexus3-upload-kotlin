@@ -29,11 +29,11 @@ class FileHandler private constructor() {
     var running: Boolean = false
 
     fun getAllFile(): List<UploadItem> {
+        println("get File："+running)
         if (running) {
             return emptyList()
         }
         running = true
-
         this.startWalk(File(root))
         val copy = arrayListOf<UploadItem>()
         copy.addAll(itemList)

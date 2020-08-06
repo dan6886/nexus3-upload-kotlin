@@ -19,7 +19,8 @@ class NexusComponentUploader {
                             println(it)
                         }).setLevel(HttpLoggingInterceptor.Level.BODY))
                 .build()
-        const val host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
+        private const val release_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
+        private const val snap_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan-snapshot"
         fun upload(uploadItem: UploadItem, callback: Callback) {
             val newCall = client.newCall(getRequest(uploadItem))
             newCall.enqueue(object : Callback {
@@ -48,8 +49,15 @@ class NexusComponentUploader {
                     .addFormDataPart("version", uploadItem.version)
                     .addFormDataPart("maven2.asset1.extension", uploadItem.extension)
                     .build()
+
+            var realHost = ""
+            if (uploadItem.version.toLowerCase().contains("snapshot")) {
+                realHost = snap_host
+            } else {
+                realHost = release_host
+            }
             return Request.Builder()
-                    .url(host)
+                    .url(realHost)
                     .post(body = requestBody)
                     .header("Authorization", Credentials.basic("admin", "admin123"))
                     .build()

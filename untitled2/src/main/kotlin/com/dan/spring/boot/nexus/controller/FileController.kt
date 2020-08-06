@@ -33,9 +33,9 @@ class FileController {
 
     @PostMapping(value = ["/upload"], consumes = arrayOf("application/json"))
     @ResponseBody
-    fun upload(@RequestBody uploadItem: UploadItem): String {
+    fun upload(@RequestBody uploadItem: UploadItem): List<UploadItem> {
         println("upload:" + uploadItem)
-        mFileService.upload(uploadItem)
-        return ""
+        mFileService.uploadSync(uploadItem)
+        return mFileService.findAll()
     }
 }
