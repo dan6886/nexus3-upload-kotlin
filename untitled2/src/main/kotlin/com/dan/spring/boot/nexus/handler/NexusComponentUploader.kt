@@ -5,12 +5,28 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import java.io.IOException
 
 /**
  * 上传
  */
+@Component
 class NexusComponentUploader {
+    @Value("\${nexus.release.host}")
+    fun setReleaseHost(host: String?) {
+        if (host != null) {
+            NexusComponentUploader.release_host = host
+        }
+    }
+
+    @Value("\${nexus.snapshot.host}")
+    fun setSnapShotHost(host: String?) {
+        if (host != null) {
+            NexusComponentUploader.snap_host = host
+        }
+    }
 
     companion object Constant {
         private val client: OkHttpClient = OkHttpClient.Builder()
@@ -19,8 +35,8 @@ class NexusComponentUploader {
                             println(it)
                         }).setLevel(HttpLoggingInterceptor.Level.BODY))
                 .build()
-        private const val release_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
-        private const val snap_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan-snapshot"
+        private var release_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
+        private var snap_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan-snapshot"
         fun upload(uploadItem: UploadItem, callback: Callback) {
             val newCall = client.newCall(getRequest(uploadItem))
             newCall.enqueue(object : Callback {

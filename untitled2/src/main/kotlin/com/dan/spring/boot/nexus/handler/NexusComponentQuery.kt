@@ -12,13 +12,29 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
 
 
 /**
  * 上传
  */
+@Component
 class NexusComponentQuery {
+    @Value("\${nexus.release.host}")
+    fun setReleaseHost(host: String?) {
+        if (host != null) {
+            NexusComponentQuery.release_host = host
+        }
+    }
+
+    @Value("\${nexus.snapshot.host}")
+    fun setSnapShotHost(host: String?) {
+        if (host != null) {
+            NexusComponentQuery.snap_host = host
+        }
+    }
 
     companion object Constant {
         private val client: OkHttpClient = OkHttpClient.Builder()
@@ -27,8 +43,8 @@ class NexusComponentQuery {
                             println(it)
                         }).setLevel(HttpLoggingInterceptor.Level.BODY))
                 .build()
-        private const val release_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
-        private const val snap_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan-snapshot"
+        private var release_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan"
+        private var snap_host: String = "http://localhost:8082/service/rest/v1/components?repository=cx-dan-snapshot"
         fun query(token: String? = "", host: String): String {
             val newCall = client.newCall(getRequest(token, host))
             val execute = newCall.execute()
@@ -59,6 +75,9 @@ class NexusComponentQuery {
             val list: MutableList<NexusPojo> = ArrayList()
             do {
                 var result = query(token, host)
+                if (StringUtils.isEmpty(result)) {
+                    break
+                }
                 var jsonObject: JSONObject = JSONObject.parseObject(result)
                 var items: JSONArray = jsonObject.getJSONArray("items")
                 token = jsonObject.getString("continuationToken")
