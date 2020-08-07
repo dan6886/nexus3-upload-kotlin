@@ -9,6 +9,7 @@
     <title>Title</title>
     <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all">
     <link rel="stylesheet" th:href="@{/layui/css/lay/modules/tableFilter.css}">
+    <script th:src="@{/clipboard.min.js}"></script>
 </head>
 <body>
 <div style="margin-bottom: 5px;">
@@ -29,27 +30,6 @@
 
 <script th:src="@{/layui/layui.js}" charset="utf-8"></script>
 <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
-<script src="clipboard.min.js">
-    var clipboard = new ClipboardJS('.btn', {
-        text: function (trigger) {
-            return trigger.getAttribute('aria-label');
-        }
-    });
-
-    clipboard.on('success', function (e) {
-        console.info('Action:', e.action);
-        console.info('Text:', e.text);
-        console.info('Trigger:', e.trigger);
-
-        e.clearSelection();
-    });
-
-    clipboard.on('error', function (e) {
-        console.error('Action:', e.action);
-        console.error('Trigger:', e.trigger);
-    });
-
-</script>
 <!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
 <script type="text/javascript" th:inline="none">
     var cach_data
@@ -69,16 +49,6 @@
             }
         });
 
-        table.on('tool(demo)', function (obj) {
-            console.log("dd" + obj)
-            var data = obj.data;
-            var layEvent = obj.event;
-            if (layEvent === 'copy') {
-                var Url2 = document.getElementById("copyGradle");
-                Url2.select(); // 选择对象
-                document.execCommand("Copy"); // 执行浏览器复制命令
-            }
-        })
         layui.$("#reloadBtn").on("click", function () {
             console.log("slider click")
             if (cach_data === null) {
@@ -96,51 +66,92 @@
         function render(table, dataParam) {
             console.log("refresh:" + dataParam)
             table.render({
-                elem: '#test'
-                , toolbar: true
-                , title: '本地数据文件'
-                , cols: [[
-                    {
-                        field: 'group',
-                        title: 'group',
-                        width: 200,
-                        fixed: 'left',
-                        unresize: true,
-                        sort: true,
-                    }
-                    , {field: 'art', title: 'artifact', width: 200, filter: true}
-                    , {field: 'version', title: '版本', width: 100,}
-                    , {field: 'file', title: '文件', width: 500, sort: true}
-                    , {
-                        field: 'extension', title: '格式', width: 80, sort: true
-                    }
-                    , {
-                        field: "installed",
-                        title: '状态',
-                        width: 215,
-                        align: 'center',
-                        fixed: 'right',
-                        templet: function (d) {
-                            // console.log(d.installed)
-                            if (d.installed) {
-                                return '<a class="layui-btn layui-btn-danger layui-btn-xs layui-disabled" >已上传</a>';
-                            } else {
-                                return '<a class="layui-btn layui-btn-danger layui-btn-xs " lay-event="upload">上传</a>';
+                    elem: '#test'
+                    , toolbar: true
+                    , title: '本地数据文件'
+                    , cols: [[
+                        {
+                            field: 'group',
+                            title: 'group',
+                            width: 200,
+                            fixed: 'left',
+                            unresize: true,
+                            sort: true,
+                        }
+                        , {field: 'art', title: 'artifact', width: 200, filter: true}
+                        , {field: 'version', title: '版本', width: 100,}
+                        , {field: 'file', title: '文件', width: 500, sort: true}
+                        , {
+                            field: 'extension', title: '格式', width: 80, sort: true
+                        }
+                        , {
+                            field: "installed",
+                            title: '状态',
+                            width: 215,
+                            align: 'center',
+                            fixed: 'right',
+                            templet: function (d) {
+                                // console.log(d.installed)
+                                if (d.installed) {
+                                    return '<a class="layui-btn layui-btn-danger layui-btn-xs layui-disabled" >已上传</a>';
+                                } else {
+                                    return '<a class="layui-btn layui-btn-danger layui-btn-xs " lay-event="upload">上传</a>';
+                                }
+                            }
+                        }, {
+                            field: 'file', title: '拷贝', width: 500, templet: function (d) {
+
+                                var a = ":";
+                                var id = "target" + new Date().getTime();
+                                var btnClass = "btnTo" + id;
+                                setTimeout(function () {
+                                    var clipboard = new ClipboardJS("." + btnClass);
+                                    clipboard.on('success', function (e) {
+                                        console.info('Action:', e.action);
+                                        console.info('Text:', e.text);
+                                        console.info('Trigger:', e.trigger);
+                                        e.clearSelection();
+                                    });
+
+                                    clipboard.on('error', function (e) {
+                                        console.error('Action:', e.action);
+                                        console.error('Trigger:', e.trigger);
+                                    });
+                                });
+                                return '<input  style="width: 90%;" id="'
+                                    + id
+                                    + '" value="'
+                                    + 'implementation \''
+                                    + d.group
+                                    + a
+                                    + d.art
+                                    + a
+                                    + d.version
+                                    + '\''
+                                    + '"/>'
+                                    + '<button style="width: 10%;" class="'
+                                    + btnClass
+                                    + '" data-clipboard-target="#'
+                                    + id
+                                    + '">copy'
+                                    + '</button>';
                             }
                         }
-                    }, {
-                        field: 'file', title: '拷贝', width: 500, templet: function (d) {
-                            return '<input id="copy" value="https://github.com/zenorocha/clipboard.js.git">\n ' +
-                                '<button class="btn" data-clipboard-target="#copy">\n ' +
-                                '<i class="layui-icon-export" alt="Copy to clipboard">\n ' +
-                                '</button>'
-                            // return '<blockquote id="copyGradle" lay-event="copy" >implementation' + d.group + ':' + d.art + ':' + d.version+'</blockquote>'
-                        }
+                    ]]
+                    , data: dataParam
+                    , limit: dataParam.length
+                    , done: function (res, curr, count) {
+                        console.log(res);
+
+                        //得到当前页码
+                        console.log(curr);
+
+                        //得到数据总量
+                        console.log(count);
                     }
-                ]]
-                , data: dataParam
-                , limit: dataParam.length
-            });
+
+                }
+            );
 
         }
 
@@ -199,7 +210,8 @@
             var copy = filterData(data)
             render(table, copy)
         }
-    });
+    })
+    ;
 
 </script>
 </body>
