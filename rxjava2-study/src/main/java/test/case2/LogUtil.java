@@ -13,6 +13,9 @@ public class LogUtil {
     }
 
     public static void print(Object o) {
+        if (null == o) {
+            o = "null object";
+        }
         String methodName = getMethodName();
         print(methodName, o);
     }
@@ -31,6 +34,7 @@ public class LogUtil {
     }
 
     private static String getMethodName() {
-        return Thread.currentThread().getStackTrace()[2].getMethodName();
+        String prefix = "[" + Thread.currentThread().getStackTrace()[3].getMethodName() + ":" + Thread.currentThread().getName() + "]";
+        return prefix;
     }
 }
